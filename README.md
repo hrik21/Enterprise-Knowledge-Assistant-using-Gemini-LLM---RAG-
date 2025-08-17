@@ -30,6 +30,69 @@ rag-enterprise-assistant/
 └── .env.example         # Environment variables template
 ```
 
+## Architecture
+
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        WEB[Web Interface]
+        API_CLIENT[API Clients]
+    end
+    
+    subgraph "API Gateway"
+        FASTAPI[FastAPI Server]
+        AUTH[Authentication]
+        RATE_LIMIT[Rate Limiting]
+    end
+    
+    subgraph "Core Services"
+        RAG_SERVICE[RAG Service]
+        EMBEDDING_SERVICE[Embedding Service]
+        RETRIEVAL_SERVICE[Retrieval Service]
+    end
+    
+    subgraph "Data Processing"
+        AIRFLOW[Apache Airflow]
+        INGESTION[Document Ingestion]
+        CHUNKING[Document Chunking]
+        EMBEDDING_GEN[Embedding Generation]
+    end
+    
+    subgraph "Storage Layer"
+        FAISS_DB[(FAISS Vector DB)]
+        METADATA_DB[(PostgreSQL)]
+        DOCUMENT_STORE[(Document Storage)]
+    end
+    
+    subgraph "External Services"
+        GEMINI[Gemini API]
+        MONITORING[Prometheus/Grafana]
+    end
+    
+    WEB --> FASTAPI
+    API_CLIENT --> FASTAPI
+    FASTAPI --> AUTH
+    FASTAPI --> RATE_LIMIT
+    FASTAPI --> RAG_SERVICE
+    
+    RAG_SERVICE --> RETRIEVAL_SERVICE
+    RAG_SERVICE --> GEMINI
+    RETRIEVAL_SERVICE --> FAISS_DB
+    EMBEDDING_SERVICE --> FAISS_DB
+    
+    AIRFLOW --> INGESTION
+    INGESTION --> CHUNKING
+    CHUNKING --> EMBEDDING_GEN
+    EMBEDDING_GEN --> EMBEDDING_SERVICE
+    EMBEDDING_GEN --> METADATA_DB
+    
+    DOCUMENT_STORE --> INGESTION
+    METADATA_DB --> RETRIEVAL_SERVICE
+    
+    FASTAPI --> MONITORING
+    RAG_SERVICE --> MONITORING
+```
+
 ## Quick Start
 
 ### Prerequisites
